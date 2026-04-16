@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VL: KI-basierte Programmierung &amp; Autonome Agenten</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #1558b0;
+            --danger: #dc3545;
+            --danger-dark: #b02a37;
+            --success: #28a745;
+            --warning: #ffc107;
+            --bg: #f4f6f9;
+            --card: #ffffff;
+            --text: #212529;
+            --text-muted: #6c757d;
+            --border: #dee2e6;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+        header h1 { font-size: 1.8rem; margin-bottom: 8px; }
+        header p { opacity: 0.9; font-size: 1rem; }
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 12px;
+        }
+
+        /* Nav Tabs */
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: var(--card);
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 14px 10px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { color: var(--primary); background: #f0f4ff; }
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .tab-content { display: none; padding: 30px 0; }
+        .tab-content.active { display: block; }
+
+        /* Cards */
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Webex Section */
+        .webex-box {
+            background: linear-gradient(135deg, #00b56a, #009e5c);
+            color: white;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .webex-box a {
+            display: inline-block;
+            background: white;
+            color: #009e5c;
+            text-decoration: none;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-top: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .webex-box a:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .webex-details {
+            margin-top: 16px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .webex-details code {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        /* Schedule */
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+        .schedule-item:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .schedule-item.cancelled {
+            opacity: 0.4;
+            text-decoration: line-through;
+            background: #fff5f5;
+        }
+        .schedule-item.holiday {
+            background: #fff8e1;
+            border-color: #ffe082;
+        }
+        .schedule-item.exam {
+            background: #e8f5e9;
+            border-color: #a5d6a7;
+        }
+        .schedule-date {
+            min-width: 90px;
+            text-align: center;
+        }
+        .schedule-date .day { font-size: 1.6rem; font-weight: 700; color: var(--primary); }
+        .schedule-date .month { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; }
+        .schedule-info { flex: 1; }
+        .schedule-info .title { font-weight: 600; }
+        .schedule-info .time { font-size: 0.85rem; color: var(--text-muted); }
+        .schedule-tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .tag-holiday { background: #fff3cd; color: #856404; }
+        .tag-exam { background: #d4edda; color: #155724; }
+        .tag-lecture { background: #cce5ff; color: #004085; }
+        .tag-cancelled { background: #f8d7da; color: #721c24; }
+
+        .btn {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-cancel { background: var(--danger); color: white; }
+        .btn-cancel:hover { background: var(--danger-dark); }
+        .btn-restore { background: var(--success); color: white; }
+        .btn-restore:hover { background: #218838; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        .btn-outline:hover { background: var(--primary); color: white; }
+
+        .ics-bar {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .ics-bar .btn { padding: 10px 24px; font-size: 0.95rem; }
+
+        /* Skript / Syllabus */
+        .modul {
+            margin-bottom: 28px;
+        }
+        .modul h3 {
+            font-size: 1.15rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #e3edf7;
+        }
+        .modul h4 {
+            font-size: 1rem;
+            margin: 12px 0 6px;
+            color: #333;
+        }
+        .modul p, .modul li {
+            font-size: 0.92rem;
+            color: #444;
+            margin-bottom: 6px;
+        }
+        .modul ul { padding-left: 20px; }
+
+        /* Accordion */
+        .accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 14px 18px;
+            background: #f0f4ff;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            transition: background 0.2s;
+            user-select: none;
+        }
+        .accordion-header:hover { background: #dde7f9; }
+        .accordion-header .arrow { transition: transform 0.3s; }
+        .accordion-header.open .arrow { transform: rotate(90deg); }
+        .accordion-body {
+            display: none;
+            padding: 12px 18px 18px;
+        }
+        .accordion-body.open { display: block; }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+
+        @media (max-width: 600px) {
+            header h1 { font-size: 1.3rem; }
+            .schedule-item { flex-wrap: wrap; }
+            .tab-btn { font-size: 0.8rem; padding: 10px 4px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <h1>KI-basierte Programmierung &amp; Autonome Agenten</h1>
+        <p>Software- &amp; Hardware-Architektur im Zeitalter von Claude 3 Opus &amp; Agentic Workflows</p>
+        <span class="badge">Jeden Donnerstag, 08:00 – 09:30 Uhr</span>
+    </div>
+</header>
+
+<nav class="tabs">
+    <button class="tab-btn active" data-tab="termine">Termine &amp; Webex</button>
+    <button class="tab-btn" data-tab="skript">Vorlesungsskript</button>
+</nav>
+
+<main class="container">
+    <!-- TAB: Termine -->
+    <section id="termine" class="tab-content active">
+
+        <div class="webex-box">
+            <h2 style="margin:0 0 4px;font-size:1.2rem;">Webex Meeting beitreten</h2>
+            <p style="opacity:0.9;font-size:0.9rem;">Meeting-Nummer: <code>2782 234 1243</code> &nbsp;|&nbsp; Passwort: <code>adJCeHn7m63</code></p>
+            <a href="https://infineon.webex.com/infineon/j.php?MTID=m7c01932db50a59bd282c86ee922960d3" target="_blank" rel="noopener">
+                &#9658; Meeting beitreten
+            </a>
+            <div class="webex-details">
+                Telefon: +49-6196-7819736 &nbsp;|&nbsp; Video: <code>27822341243@infineon.webex.com</code>
+            </div>
+        </div>
+
+        <div class="ics-bar">
+            <button class="btn btn-primary" onclick="downloadICS()">&#128197; Alle Termine als .ics herunterladen</button>
+            <button class="btn btn-outline" onclick="resetAll()">&#8635; Alle Absagen zurücksetzen</button>
+        </div>
+
+        <div class="card">
+            <h2>&#128467; Vorlesungsplan</h2>
+            <div id="schedule"></div>
+        </div>
+    </section>
+
+    <!-- TAB: Skript -->
+    <section id="skript" class="tab-content">
+        <div class="card">
+            <h2>&#128218; Vorlesungsverzeichnis</h2>
+            <p style="color:var(--text-muted);margin-bottom:20px;">KI-basierte Programmierung &amp; Autonome Agenten – Themenschwerpunkt: Software- &amp; Hardware-Architektur im Zeitalter von Claude 3 Opus &amp; Agentic Workflows</p>
+
+            <!-- Modul 1 -->
+            <div class="modul">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    Modul 1: Grundlagen &amp; Die "Agentic" Wende
+                    <span class="arrow">&#9654;</span>
+                </div>
+                <div class="accordion-body">
+                    <h4>1.1 Der Paradigmenwechsel: Von der Chat-KI zum Autonomen Agenten</h4>
+                    <p>Die Art und Weise, wie wir mit Künstlicher Intelligenz programmieren, hat sich grundlegend gewandelt. Lange Zeit nutzten wir LLMs als reaktive Chatbots: Ein Nutzer gibt einen Prompt ein, die KI generiert eine Antwort. Dieser Prozess ist linear und endet mit dem Output.</p>
+                    <p>Die "Agentic" Wende bricht dieses Muster auf. Ein KI-Agent ist kein reiner Textgenerator mehr, sondern ein System, das in einer Schleife (Loop) agiert. Er erhält ein hochgradiges Ziel, plant die notwendigen Schritte selbstständig, führt Code aus, testet das Ergebnis und korrigiert sich bei Fehlern selbst.</p>
+
+                    <h4>1.2 Die Evolution des Reasoning: Fundament der Architektur</h4>
+                    <ul>
+                        <li><strong>Chain-of-Thought (CoT):</strong> Moderne Modelle bilden interne Zwischenschritte, um komplexe Systemdesigns ohne logische Brüche zu entwerfen.</li>
+                        <li><strong>Iterative Reflexion:</strong> Ein Agent kann seinen eigenen Entwurf hinterfragen. Dieser Prozess minimiert strukturelle Fehler.</li>
+                    </ul>
+
+                    <h4>1.3 Warum Claude 3 Opus als primäres Werkzeug?</h4>
+                    <ul>
+                        <li><strong>Überlegenes Reasoning:</strong> Besonders hohe Präzision bei logischen Verknüpfungen.</li>
+                        <li><strong>200k Kontextfenster:</strong> Claude 3 Opus kann eine gesamte Codebasis oder ein komplettes technisches Handbuch lesen und bei jeder Entscheidung berücksichtigen.</li>
+                        <li><strong>Geringe Halluzinationsrate:</strong> Konservativer und präziser als andere Modelle.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Modul 2 -->
+            <div class="modul">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    Modul 2: Die Anatomie der Agenten (Theorie &amp; Architektur)
+                    <span class="arrow">&#9654;</span>
+                </div>
+                <div class="accordion-body">
+                    <h4>2.1 Das "Gehirn" (Planning &amp; Reasoning)</h4>
+                    <ul>
+                        <li><strong>Task Decomposition:</strong> Der Agent zerlegt ein komplexes Ziel in kleine, handhabbare Teilschritte.</li>
+                        <li><strong>Self-Reflection &amp; Critique:</strong> Reflexionsschleife – der Agent erstellt einen Entwurf, schlüpft in die Rolle eines Kritikers und korrigiert Logikfehler.</li>
+                    </ul>
+
+                    <h4>2.2 Das Gedächtnis (Memory)</h4>
+                    <ul>
+                        <li><strong>Short-term Memory:</strong> Realisiert durch das Context Window (200.000 Token bei Claude 3 Opus).</li>
+                        <li><strong>Long-term Memory:</strong> Vektordatenbanken (RAG) für firmeninterne Standards, Sicherheitsrichtlinien oder Hardware-Datenblätter.</li>
+                    </ul>
+
+                    <h4>2.3 Die Werkzeuge (Tool Use / Function Calling)</h4>
+                    <ul>
+                        <li><strong>API-Schnittstellen:</strong> Online-Dokumentation durchsuchen, Tickets erstellen.</li>
+                        <li><strong>Code-Execution:</strong> Code in einer Sandbox ausführen, Fehlermeldungen lesen, Bugs autonom fixen.</li>
+                        <li><strong>Hardware-Simulatoren:</strong> Spice oder ModelSim ansteuern, um Schaltungen virtuell zu validieren.</li>
+                    </ul>
+
+                    <h4>2.4 Multi-Agent-Systeme (MAS)</h4>
+                    <ul>
+                        <li><strong>Architect Agent:</strong> Fokus auf High-Level-Strukturen und Systemstabilität.</li>
+                        <li><strong>Coder Agent:</strong> Fokus auf effiziente Implementierung und Syntax.</li>
+                        <li><strong>Reviewer/Security Agent:</strong> Sucht gezielt nach Sicherheitslücken oder Hardware-Engpässen.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Modul 3 -->
+            <div class="modul">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    Modul 3: KI-Agenten in der Software-Architektur
+                    <span class="arrow">&#9654;</span>
+                </div>
+                <div class="accordion-body">
+                    <h4>3.1 High-Level Design &amp; System-Blueprints</h4>
+                    <ul>
+                        <li>Automatisierte Diagrammerstellung mit Mermaid.js / PlantUML.</li>
+                        <li>Entscheidungsvorlagen (ADRs): Vor- und Nachteile verschiedener Architektur-Muster abwägen.</li>
+                        <li>Microservice-Topologien nach Domain-Driven Design.</li>
+                    </ul>
+
+                    <h4>3.2 Systemweite Konsistenz durch "Large Context"</h4>
+                    <ul>
+                        <li><strong>Single Source of Truth:</strong> Gesamte API-Spezifikation im Gedächtnis – Breaking Changes werden erkannt.</li>
+                        <li><strong>Boilerplate-Eliminierung:</strong> Konsistente DTOs, Mapper und Client-Bibliotheken.</li>
+                    </ul>
+
+                    <h4>3.3 Refactoring &amp; Modernisierung von Legacy-Systemen</h4>
+                    <ul>
+                        <li>Code-Analyse: Zirkuläre Abhängigkeiten identifizieren.</li>
+                        <li>Automatisierte Migration: Sprach-Portierung mit gleichzeitiger Unit-Test-Erstellung.</li>
+                        <li>Technical Debt Radar: Wartbarkeit bewerten, Refactoring priorisieren.</li>
+                    </ul>
+
+                    <h4>3.4 Praxisbeispiel: Der "Architect-to-Code" Workflow</h4>
+                    <p>Input → Architect-Agent (Systemdesign) → Dev-Agents (parallele Implementierung) → Review-Agent (Prüfung gegen Architektur &amp; Sicherheit).</p>
+                </div>
+            </div>
+
+            <!-- Modul 4 -->
+            <div class="modul">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    Modul 4: KI-Agenten in der Hardware-Architektur
+                    <span class="arrow">&#9654;</span>
+                </div>
+                <div class="accordion-body">
+                    <h4>4.1 Hardware-Software Co-Design</h4>
+                    <ul>
+                        <li>Schnittstellen-Optimierung: Hardware (FPGA) vs. Software (CPU).</li>
+                        <li>Treiber-Automatisierung: C-Treiber oder HAL aus Datenblättern generieren.</li>
+                        <li>Latenz-Simulation: Durchlaufzeiten und Engpässe berechnen.</li>
+                    </ul>
+
+                    <h4>4.2 Automatisierte Spezifikation &amp; HDL-Generierung</h4>
+                    <ul>
+                        <li>VHDL/Verilog-Coding: Zustandsautomaten aus Textbeschreibungen generieren.</li>
+                        <li>Register-Map-Erstellung: Automatisierte Definition von Register-Adressen und Bit-Belegungen.</li>
+                        <li>Constraint-Prüfung: Physische Grenzen der Ziel-Hardware einhalten.</li>
+                    </ul>
+
+                    <h4>4.3 Layout-Optimierung &amp; Ressourcen-Management</h4>
+                    <ul>
+                        <li>Energy-Aware Design: Clock Gating zur Stromverbrauch-Senkung.</li>
+                        <li>Thermische Analyse: Layout-Änderungen gegen Hotspots.</li>
+                        <li>Automatisierte Verifikation: Testbenches für Edge Cases.</li>
+                    </ul>
+
+                    <h4>4.4 Praxisbeispiel: Vom Datenblatt zum Prototyp</h4>
+                    <p>PDF-Datenblatt → Spezifikations-Agent → HDL-Agent (Verilog) → Verification-Agent (Signal-Integrität).</p>
+                </div>
+            </div>
+
+            <!-- Modul 5 -->
+            <div class="modul">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    Modul 5: Praxisteil &amp; Implementation
+                    <span class="arrow">&#9654;</span>
+                </div>
+                <div class="accordion-body">
+                    <h4>5.1 Der Finanz-Entscheider: Autonomer Trading-Bot</h4>
+                    <ul>
+                        <li>Strategie-Reasoning: Handelslogiken (Momentum, Sentiment-Analyse).</li>
+                        <li>Automatisierte Entscheidung: Bot mit Python &amp; Alpaca-API.</li>
+                        <li>Risiko-Management: Watchdog-Agent mit Stop-Loss-Absicherung.</li>
+                    </ul>
+
+                    <h4>5.2 Full-Stack Deployment: Vom Code zur Webseite</h4>
+                    <ul>
+                        <li>Backend-Integration: APIs für Datenbereitstellung.</li>
+                        <li>Frontend-Generierung: Streamlit / React, Dashboards, Diagramme.</li>
+                        <li>Deployment-Workflow: Automatisierte Bereitstellung auf Webservern.</li>
+                    </ul>
+
+                    <h4>5.3 Physical Computing: Der Kamera-basierte Rover</h4>
+                    <ul>
+                        <li>Vision-Pipeline (OpenCV): Graustufen/HSV, Farberkennung, Zentrumsberechnung.</li>
+                        <li>Motorsteuerung (PID-Regler): Linienverfolgung mit Kreppband.</li>
+                    </ul>
+
+                    <h4>5.4 Der "Master-Agent" Workflow</h4>
+                    <p>Prompt-to-Product: Nur das Ziel vorgeben → interdisziplinäre Lösung → autonomes Debugging.</p>
+                </div>
+            </div>
+
+            <!-- Modul 6 -->
+            <div class="modul">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    Modul 6: Evaluation, Sicherheit &amp; Ethik
+                    <span class="arrow">&#9654;</span>
+                </div>
+                <div class="accordion-body">
+                    <h4>6.1 Halluzinations-Management &amp; Verifikation</h4>
+                    <ul>
+                        <li>Cross-Check-Strategien: Multi-Agent-Debate.</li>
+                        <li>Formale Verifikation: Mathematische Beweise / Simulationstests.</li>
+                        <li>Human-in-the-Loop: Checkpoints für menschliche Freigabe.</li>
+                    </ul>
+
+                    <h4>6.2 Security by Design &amp; Safety</h4>
+                    <ul>
+                        <li>Prompt Injection: Schutz vor Manipulation.</li>
+                        <li>Sandbox-Execution: Isolierte Umgebungen (Docker/Container).</li>
+                        <li>Daten-Privatsphäre: Lokale Modelle, Privacy-Gateways.</li>
+                    </ul>
+
+                    <h4>6.3 Ethische Aspekte &amp; Verantwortung</h4>
+                    <ul>
+                        <li>Haftungsfragen bei autonomen Entscheidungen.</li>
+                        <li>Erklärbarkeit (Explainability) von Architektur-Entscheidungen.</li>
+                    </ul>
+
+                    <h4>6.4 Ausblick: Die Zukunft des "AI-Native Engineering"</h4>
+                    <p>Vom Coder zum Orchestrator. Echtzeit-Adaption ohne menschlichen Eingriff.</p>
+                </div>
+            </div>
+
+            <!-- Anhang -->
+            <div class="modul">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    Anhang: Begleitliteratur &amp; Ressourcen
+                    <span class="arrow">&#9654;</span>
+                </div>
+                <div class="accordion-body">
+                    <ul>
+                        <li><strong>Kerntexte:</strong> Lilian Weng (OpenAI), Andrew Ng (DeepLearning.AI).</li>
+                        <li><strong>Tools:</strong> LangChain, CrewAI, Anthropic API (Claude 3 Opus).</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </section>
+</main>
+
+<footer>
+    <div class="container">
+        KI-basierte Programmierung &amp; Autonome Agenten &bull; SoSe 2026
+    </div>
+</footer>
+
+<script>
+// ─── Lecture Data ───
+const LECTURES = [
+    { date: '2026-04-16', type: 'lecture', label: 'Vorlesung 1 – Modul 1: Grundlagen & Die "Agentic" Wende' },
+    { date: '2026-04-23', type: 'lecture', label: 'Vorlesung 2 – Modul 2: Anatomie der Agenten' },
+    { date: '2026-04-30', type: 'lecture', label: 'Vorlesung 3 – Modul 3: KI-Agenten in der Software-Architektur' },
+    { date: '2026-05-07', type: 'lecture', label: 'Vorlesung 4 – Modul 4: KI-Agenten in der Hardware-Architektur' },
+    { date: '2026-05-14', type: 'holiday', label: 'Christi Himmelfahrt – keine Vorlesung' },
+    { date: '2026-05-21', type: 'lecture', label: 'Vorlesung 5 – Modul 5: Praxisteil & Implementation' },
+    { date: '2026-05-28', type: 'lecture', label: 'Vorlesung 6 – Modul 6: Evaluation, Sicherheit & Ethik' },
+    { date: '2026-06-04', type: 'holiday', label: 'Fronleichnam – keine Vorlesung' },
+    { date: '2026-06-11', type: 'lecture', label: 'Vorlesung 7 – Wiederholung & Prüfungsvorbereitung' },
+    { date: '2026-06-18', type: 'exam',    label: 'Prüfung' },
+];
+
+const MONTHS_DE = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+const DAYS_DE = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+
+function getCancelled() {
+    return JSON.parse(localStorage.getItem('vl_cancelled') || '[]');
+}
+function setCancelled(arr) {
+    localStorage.setItem('vl_cancelled', JSON.stringify(arr));
+}
+
+function renderSchedule() {
+    const container = document.getElementById('schedule');
+    const cancelled = getCancelled();
+    container.innerHTML = '';
+
+    LECTURES.forEach((item) => {
+        const d = new Date(item.date + 'T08:00:00');
+        const day = d.getDate();
+        const month = MONTHS_DE[d.getMonth()];
+        const dayName = DAYS_DE[d.getDay()];
+        const isCancelled = cancelled.includes(item.date);
+
+        let cssClass = 'schedule-item';
+        if (item.type === 'holiday') cssClass += ' holiday';
+        if (item.type === 'exam') cssClass += ' exam';
+        if (isCancelled) cssClass += ' cancelled';
+
+        let tagHTML = '';
+        if (item.type === 'holiday') tagHTML = '<span class="schedule-tag tag-holiday">Feiertag</span>';
+        else if (item.type === 'exam') tagHTML = '<span class="schedule-tag tag-exam">Prüfung</span>';
+        else if (isCancelled) tagHTML = '<span class="schedule-tag tag-cancelled">Abgesagt</span>';
+        else tagHTML = '<span class="schedule-tag tag-lecture">Vorlesung</span>';
+
+        let actionHTML = '';
+        if (item.type === 'lecture') {
+            if (isCancelled) {
+                actionHTML = `<button class="btn btn-restore" onclick="restoreLecture('${item.date}')">Wiederherstellen</button>`;
+            } else {
+                actionHTML = `<button class="btn btn-cancel" onclick="cancelLecture('${item.date}')">Absagen</button>`;
+            }
+        }
+
+        container.innerHTML += `
+            <div class="${cssClass}">
+                <div class="schedule-date">
+                    <div class="day">${day}</div>
+                    <div class="month">${month} ${d.getFullYear()}</div>
+                </div>
+                <div class="schedule-info">
+                    <div class="title">${item.label}</div>
+                    <div class="time">${dayName}, 08:00 – 09:30 Uhr</div>
+                </div>
+                ${tagHTML}
+                ${actionHTML}
+            </div>
+        `;
+    });
+}
+
+function cancelLecture(date) {
+    if (!confirm('Vorlesung am ' + formatDateDE(date) + ' wirklich absagen?')) return;
+    const c = getCancelled();
+    if (!c.includes(date)) c.push(date);
+    setCancelled(c);
+    renderSchedule();
+}
+
+function restoreLecture(date) {
+    const c = getCancelled().filter(d => d !== date);
+    setCancelled(c);
+    renderSchedule();
+}
+
+function resetAll() {
+    if (!confirm('Alle Absagen zurücksetzen?')) return;
+    setCancelled([]);
+    renderSchedule();
+}
+
+function formatDateDE(dateStr) {
+    const d = new Date(dateStr + 'T08:00:00');
+    return `${d.getDate()}. ${MONTHS_DE[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// ─── ICS Generation ───
+function downloadICS() {
+    const cancelled = getCancelled();
+    let icsContent = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//VL KI-Agenten//DE',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'X-WR-CALNAME:VL KI-basierte Programmierung',
+        'X-WR-TIMEZONE:Europe/Berlin',
+    ];
+
+    LECTURES.forEach((item) => {
+        if (item.type === 'holiday') return;
+        if (cancelled.includes(item.date)) return;
+
+        const dateClean = item.date.replace(/-/g, '');
+        const uid = 'vl-ki-agenten-' + dateClean + '@vorlesung';
+        const now = new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+
+        let description = item.label;
+        if (item.type === 'lecture') {
+            description += '\\nWebex: https://infineon.webex.com/infineon/j.php?MTID=m7c01932db50a59bd282c86ee922960d3\\nMeeting-Nr: 2782 234 1243\\nPasswort: adJCeHn7m63';
+        }
+
+        icsContent.push(
+            'BEGIN:VEVENT',
+            `DTSTART;TZID=Europe/Berlin:${dateClean}T080000`,
+            `DTEND;TZID=Europe/Berlin:${dateClean}T093000`,
+            `SUMMARY:${item.label}`,
+            `DESCRIPTION:${description}`,
+            `UID:${uid}`,
+            `DTSTAMP:${now}`,
+            item.type === 'lecture'
+                ? 'LOCATION:Webex Meeting (siehe Beschreibung)'
+                : 'LOCATION:TBD',
+            'END:VEVENT'
+        );
+    });
+
+    icsContent.push('END:VCALENDAR');
+
+    const blob = new Blob([icsContent.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'VL_KI_Agenten_SoSe2026.ics';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// ─── Tabs ───
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+});
+
+// ─── Accordion ───
+function toggleAccordion(header) {
+    header.classList.toggle('open');
+    const body = header.nextElementSibling;
+    body.classList.toggle('open');
+}
+
+// ─── Init ───
+renderSchedule();
+</script>
+
+</body>
+</html>

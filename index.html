@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VL: KI-basierte Programmierung &amp; Autonome Agenten</title>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <style>
         :root {
             --primary: #1a73e8;
@@ -846,21 +848,43 @@ function toggleAccordion(header) {
     body.classList.toggle('open');
 }
 
-// ─── Hardware-Projekt Voting (localStorage) ───
-let currentSort = 'rating';
+// ─── Hardware-Projekt Voting (Firebase Realtime DB) ───
+// *** FIREBASE CONFIG ***
+const firebaseConfig = {
+    apiKey: "AIzaSyC1fkv3N5ygkm_1tPkNwgV7oANyBck3U-4",
+    authDomain: "vorlesung-ki-agenten.firebaseapp.com",
+    databaseURL: "https://vorlesung-ki-agenten-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "vorlesung-ki-agenten",
+    storageBucket: "vorlesung-ki-agenten.firebasestorage.app",
+    messagingSenderId: "329475111880",
+    appId: "1:329475111880:web:5ed2e8da43883f4a2e1efd"
+};
 
-function getIdeas() {
-    return JSON.parse(localStorage.getItem('vl_hw_ideas') || '[]');
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const ideasRef = db.ref('ideas');
+
+let currentSort = 'rating';
+let ideasCache = [];
+
+// Visitor-ID pro Browser (für Bewertungen)
+function getVisitorId() {
+    let id = localStorage.getItem('vl_visitor_id');
+    if (!id) {
+        id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        localStorage.setItem('vl_visitor_id', id);
+    }
+    return id;
 }
-function saveIdeas(ideas) {
-    localStorage.setItem('vl_hw_ideas', JSON.stringify(ideas));
-}
-function getMyVotes() {
-    return JSON.parse(localStorage.getItem('vl_hw_myvotes') || '{}');
-}
-function saveMyVotes(votes) {
-    localStorage.setItem('vl_hw_myvotes', JSON.stringify(votes));
-}
+
+// Firebase live-listener: aktualisiert automatisch bei Änderungen
+ideasRef.on('value', (snapshot) => {
+    ideasCache = [];
+    snapshot.forEach(child => {
+        ideasCache.push({ id: child.key, ...child.val() });
+    });
+    renderIdeas();
+});
 
 function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
@@ -872,16 +896,13 @@ function submitIdea() {
     if (!text) { input.focus(); return; }
     if (text.length < 3) { alert('Bitte mindestens 3 Zeichen eingeben.'); return; }
 
-    const ideas = getIdeas();
-    ideas.push({
-        id: generateId(),
+    const newRef = ideasRef.push();
+    newRef.set({
         title: text,
         ratings: {},
         created: Date.now()
     });
-    saveIdeas(ideas);
     input.value = '';
-    renderIdeas();
 }
 
 document.getElementById('idea-input').addEventListener('keydown', (e) => {
@@ -889,30 +910,13 @@ document.getElementById('idea-input').addEventListener('keydown', (e) => {
 });
 
 function rateIdea(ideaId, stars) {
-    const ideas = getIdeas();
-    const myVotes = getMyVotes();
-    const idea = ideas.find(i => i.id === ideaId);
-    if (!idea) return;
-
-    // Use a simple visitorId per browser
-    let visitorId = localStorage.getItem('vl_visitor_id');
-    if (!visitorId) {
-        visitorId = generateId();
-        localStorage.setItem('vl_visitor_id', visitorId);
-    }
-
-    idea.ratings[visitorId] = stars;
-    myVotes[ideaId] = stars;
-    saveIdeas(ideas);
-    saveMyVotes(myVotes);
-    renderIdeas();
+    const visitorId = getVisitorId();
+    ideasRef.child(ideaId).child('ratings').child(visitorId).set(stars);
 }
 
 function deleteIdea(ideaId) {
     if (!confirm('Diesen Vorschlag wirklich löschen?')) return;
-    const ideas = getIdeas().filter(i => i.id !== ideaId);
-    saveIdeas(ideas);
-    renderIdeas();
+    ideasRef.child(ideaId).remove();
 }
 
 function getAvgRating(idea) {
@@ -935,8 +939,8 @@ function setSort(mode) {
 function renderIdeas() {
     const container = document.getElementById('ideas-list');
     const countEl = document.getElementById('idea-count');
-    let ideas = getIdeas();
-    const myVotes = getMyVotes();
+    let ideas = [...ideasCache];
+    const visitorId = getVisitorId();
 
     countEl.textContent = ideas.length;
 
@@ -949,7 +953,7 @@ function renderIdeas() {
     if (currentSort === 'rating') {
         ideas.sort((a, b) => getAvgRating(b) - getAvgRating(a) || getVoteCount(b) - getVoteCount(a));
     } else if (currentSort === 'newest') {
-        ideas.sort((a, b) => b.created - a.created);
+        ideas.sort((a, b) => (b.created || 0) - (a.created || 0));
     } else if (currentSort === 'votes') {
         ideas.sort((a, b) => getVoteCount(b) - getVoteCount(a));
     }
@@ -957,7 +961,7 @@ function renderIdeas() {
     container.innerHTML = ideas.map((idea, idx) => {
         const avg = getAvgRating(idea);
         const count = getVoteCount(idea);
-        const myRating = myVotes[idea.id] || 0;
+        const myRating = (idea.ratings && idea.ratings[visitorId]) || 0;
 
         const starsHTML = [1,2,3,4,5].map(s =>
             `<span class="star ${s <= myRating ? 'filled' : ''}" 
@@ -1005,7 +1009,7 @@ function escapeHtml(text) {
 
 // ─── Init ───
 renderSchedule();
-renderIdeas();
+// renderIdeas() wird automatisch durch Firebase live-listener aufgerufen
 </script>
 
 </body>

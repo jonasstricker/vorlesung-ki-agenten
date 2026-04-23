@@ -250,6 +250,121 @@
         }
         .accordion-body.open { display: block; }
 
+        /* Voting */
+        .vote-intro {
+            background: linear-gradient(135deg, #7c4dff, #651fff);
+            color: white;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .vote-intro h2 { color: white; margin-bottom: 8px; justify-content: center; }
+        .vote-intro p { opacity: 0.9; }
+        .submit-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+        .submit-box input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .submit-box input:focus { border-color: var(--primary); }
+        .submit-box button {
+            padding: 12px 24px;
+            white-space: nowrap;
+        }
+        .idea-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: box-shadow 0.2s;
+        }
+        .idea-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        .idea-rank {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 36px;
+            text-align: center;
+        }
+        .idea-content { flex: 1; }
+        .idea-title { font-weight: 600; font-size: 1.05rem; margin-bottom: 4px; }
+        .idea-meta { font-size: 0.8rem; color: var(--text-muted); }
+        .star-rating {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .star-rating .star {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #ddd;
+            transition: color 0.15s, transform 0.15s;
+            user-select: none;
+        }
+        .star-rating .star:hover { transform: scale(1.2); }
+        .star-rating .star.filled { color: #ffc107; }
+        .star-rating .star.hover-active { color: #ffca28; }
+        .avg-score {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffc107;
+            min-width: 50px;
+            text-align: center;
+        }
+        .vote-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        .idea-delete {
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+        .idea-delete:hover { color: var(--danger); }
+        #ideas-list-empty {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+        .sort-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .sort-bar span { font-size: 0.85rem; color: var(--text-muted); }
+        .sort-btn {
+            padding: 4px 12px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .sort-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
         /* Footer */
         footer {
             text-align: center;
@@ -264,6 +379,8 @@
             header h1 { font-size: 1.3rem; }
             .schedule-item { flex-wrap: wrap; }
             .tab-btn { font-size: 0.8rem; padding: 10px 4px; }
+            .submit-box { flex-direction: column; }
+            .idea-card { flex-wrap: wrap; }
         }
     </style>
 </head>
@@ -280,6 +397,7 @@
 <nav class="tabs">
     <button class="tab-btn active" data-tab="termine">Termine &amp; Webex</button>
     <button class="tab-btn" data-tab="skript">Vorlesungsskript</button>
+    <button class="tab-btn" data-tab="projekte">HW-Projekte Voting</button>
 </nav>
 
 <main class="container">
@@ -522,6 +640,36 @@
     </section>
 </main>
 
+    <!-- TAB: Projekte Voting -->
+    <section id="projekte" class="tab-content">
+        <div class="vote-intro">
+            <h2>&#9889; Hardware-Projekt Abstimmung</h2>
+            <p>Schlage Themen für das Hardware-Projekt vor und bewerte die Ideen anderer mit 1–5 Sternen!</p>
+        </div>
+
+        <div class="card">
+            <h2>&#128161; Neuen Vorschlag einreichen</h2>
+            <div class="submit-box">
+                <input type="text" id="idea-input" placeholder="z.B. FPGA-basierter Audio-Synthesizer" maxlength="200">
+                <button class="btn btn-primary" onclick="submitIdea()">Einreichen</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+                <h2 style="margin-bottom:0">&#128202; Vorschläge (<span id="idea-count">0</span>)</h2>
+                <div class="sort-bar" style="margin-bottom:0">
+                    <span>Sortieren:</span>
+                    <button class="sort-btn active" data-sort="rating" onclick="setSort('rating')">Bewertung</button>
+                    <button class="sort-btn" data-sort="newest" onclick="setSort('newest')">Neueste</button>
+                    <button class="sort-btn" data-sort="votes" onclick="setSort('votes')">Meiste Votes</button>
+                </div>
+            </div>
+            <div id="ideas-list"></div>
+        </div>
+    </section>
+</main>
+
 <footer>
     <div class="container">
         KI-basierte Programmierung &amp; Autonome Agenten &bull; SoSe 2026
@@ -698,8 +846,166 @@ function toggleAccordion(header) {
     body.classList.toggle('open');
 }
 
+// ─── Hardware-Projekt Voting (localStorage) ───
+let currentSort = 'rating';
+
+function getIdeas() {
+    return JSON.parse(localStorage.getItem('vl_hw_ideas') || '[]');
+}
+function saveIdeas(ideas) {
+    localStorage.setItem('vl_hw_ideas', JSON.stringify(ideas));
+}
+function getMyVotes() {
+    return JSON.parse(localStorage.getItem('vl_hw_myvotes') || '{}');
+}
+function saveMyVotes(votes) {
+    localStorage.setItem('vl_hw_myvotes', JSON.stringify(votes));
+}
+
+function generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+}
+
+function submitIdea() {
+    const input = document.getElementById('idea-input');
+    const text = input.value.trim();
+    if (!text) { input.focus(); return; }
+    if (text.length < 3) { alert('Bitte mindestens 3 Zeichen eingeben.'); return; }
+
+    const ideas = getIdeas();
+    ideas.push({
+        id: generateId(),
+        title: text,
+        ratings: {},
+        created: Date.now()
+    });
+    saveIdeas(ideas);
+    input.value = '';
+    renderIdeas();
+}
+
+document.getElementById('idea-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitIdea();
+});
+
+function rateIdea(ideaId, stars) {
+    const ideas = getIdeas();
+    const myVotes = getMyVotes();
+    const idea = ideas.find(i => i.id === ideaId);
+    if (!idea) return;
+
+    // Use a simple visitorId per browser
+    let visitorId = localStorage.getItem('vl_visitor_id');
+    if (!visitorId) {
+        visitorId = generateId();
+        localStorage.setItem('vl_visitor_id', visitorId);
+    }
+
+    idea.ratings[visitorId] = stars;
+    myVotes[ideaId] = stars;
+    saveIdeas(ideas);
+    saveMyVotes(myVotes);
+    renderIdeas();
+}
+
+function deleteIdea(ideaId) {
+    if (!confirm('Diesen Vorschlag wirklich löschen?')) return;
+    const ideas = getIdeas().filter(i => i.id !== ideaId);
+    saveIdeas(ideas);
+    renderIdeas();
+}
+
+function getAvgRating(idea) {
+    const vals = Object.values(idea.ratings || {});
+    if (vals.length === 0) return 0;
+    return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+
+function getVoteCount(idea) {
+    return Object.keys(idea.ratings || {}).length;
+}
+
+function setSort(mode) {
+    currentSort = mode;
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.sort-btn[data-sort="${mode}"]`).classList.add('active');
+    renderIdeas();
+}
+
+function renderIdeas() {
+    const container = document.getElementById('ideas-list');
+    const countEl = document.getElementById('idea-count');
+    let ideas = getIdeas();
+    const myVotes = getMyVotes();
+
+    countEl.textContent = ideas.length;
+
+    if (ideas.length === 0) {
+        container.innerHTML = '<div id="ideas-list-empty">Noch keine Vorschläge. Sei der/die Erste! &#128640;</div>';
+        return;
+    }
+
+    // Sort
+    if (currentSort === 'rating') {
+        ideas.sort((a, b) => getAvgRating(b) - getAvgRating(a) || getVoteCount(b) - getVoteCount(a));
+    } else if (currentSort === 'newest') {
+        ideas.sort((a, b) => b.created - a.created);
+    } else if (currentSort === 'votes') {
+        ideas.sort((a, b) => getVoteCount(b) - getVoteCount(a));
+    }
+
+    container.innerHTML = ideas.map((idea, idx) => {
+        const avg = getAvgRating(idea);
+        const count = getVoteCount(idea);
+        const myRating = myVotes[idea.id] || 0;
+
+        const starsHTML = [1,2,3,4,5].map(s =>
+            `<span class="star ${s <= myRating ? 'filled' : ''}" 
+                  onmouseover="hoverStars(this, ${s})" 
+                  onmouseout="unhoverStars(this)" 
+                  onclick="rateIdea('${idea.id}', ${s})">&#9733;</span>`
+        ).join('');
+
+        const dateStr = new Date(idea.created).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+
+        return `
+            <div class="idea-card">
+                <div class="idea-rank">#${idx + 1}</div>
+                <div class="idea-content">
+                    <div class="idea-title">${escapeHtml(idea.title)}</div>
+                    <div class="idea-meta">Eingereicht am ${dateStr}</div>
+                </div>
+                <div style="text-align:center">
+                    <div class="avg-score">${avg > 0 ? avg.toFixed(1) : '–'} &#9733;</div>
+                    <div class="vote-count">${count} ${count === 1 ? 'Stimme' : 'Stimmen'}</div>
+                </div>
+                <div class="star-rating">${starsHTML}</div>
+                <button class="idea-delete" onclick="deleteIdea('${idea.id}')" title="Löschen">&times;</button>
+            </div>
+        `;
+    }).join('');
+}
+
+function hoverStars(el, rating) {
+    const stars = el.parentElement.querySelectorAll('.star');
+    stars.forEach((s, i) => {
+        s.classList.toggle('hover-active', i < rating);
+    });
+}
+function unhoverStars(el) {
+    const stars = el.parentElement.querySelectorAll('.star');
+    stars.forEach(s => s.classList.remove('hover-active'));
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // ─── Init ───
 renderSchedule();
+renderIdeas();
 </script>
 
 </body>
